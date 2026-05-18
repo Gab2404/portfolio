@@ -1,0 +1,37 @@
+name: Déploiement Portfolio CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: Configuration de la clé SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Synchronisation des fichiers vers le serveur cible
+        run: |
+          rsync -avz --delete ./src/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/opt/portfolio-infra/src/
+          rsync -avz --delete ./reverse-proxy/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/opt/portfolio-infra/reverse-proxy/
+
+      - name: Build et Déploiement des conteneurs
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            cd /opt/portfolio-infra/src && 
+            docker build -t portfolio:latest . && 
+            docker stop portfolio || true && 
+            docker rm portfolio || true && 
+            docker run -d --name portfolio --network portfolio-network --restart unless-stopped portfolio:latest &&
+            cd /opt/portfolio-infra/reverse-proxy &&
+            docker compose up -d
+          "
