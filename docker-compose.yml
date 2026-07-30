@@ -1,0 +1,52 @@
+services:
+
+  # ── Backend: ASP.NET Core API ────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: portfolio-backend
+    restart: unless-stopped
+    environment:
+      # Keys injected from the .env file — never hard-coded
+      - AiApiKey=${AI_API_KEY}
+      - GitHubToken=${GITHUB_TOKEN}
+      - ASPNETCORE_ENVIRONMENT=Production
+    networks:
+      - internal
+    # Not exposed to the host — only reachable by nginx on the internal network
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ── Frontend: Nginx static server + reverse proxy ────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: portfolio-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"        # Only this port is exposed to the host/internet
+    networks:
+      - internal
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+# ── Isolated internal network ─────────────────────────────────────────────────
+# The backend is never directly reachable from outside — only via nginx.
+networks:
+  internal:
+    driver: bridge
+    internal: false   # set to true to fully isolate (no outbound internet for containers)

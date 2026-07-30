@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI-powered GitHub project analyzer — Portfolio tool for infrastructure & cybersecurity engineers." />
+  <title>Project Analyzer — Portfolio</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- ── Header ── -->
+    <header>
+      <div class="header-badge">AI · GitHub Analyzer · v1.0</div>
+      <h1>Analyze Any<br><span class="gradient">GitHub Project</span></h1>
+      <p class="subtitle">
+        Drop a public repository URL and get an AI-generated technical breakdown
+        in seconds — summary, tech stack & objective.
+      </p>
+    </header>
+
+    <!-- ── Analyzer Card ── -->
+    <section class="analyzer-card" aria-label="Repository Analyzer">
+      <p class="card-label">// repository url</p>
+
+      <form id="analyzer-form" novalidate>
+        <div class="input-group">
+          <input
+            id="repo-url"
+            type="url"
+            placeholder="https://github.com/owner/repository"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="GitHub repository URL"
+          />
+          <button id="analyze-btn" type="submit">Analyze</button>
+        </div>
+      </form>
+
+      <!-- Loader -->
+      <div id="loader" role="status" aria-live="polite">
+        <div class="loader-ring" aria-hidden="true"></div>
+        <p class="loader-text">
+          AI is reading the repository<span class="loader-dots"></span>
+        </p>
+      </div>
+
+      <!-- Error Banner -->
+      <div id="error-banner" class="hidden" role="alert" aria-live="assertive">
+        <span aria-hidden="true">⚠</span>
+        <span id="error-msg"></span>
+      </div>
+    </section>
+
+    <!-- ── Result Section ── -->
+    <section id="result-section" aria-label="Analysis Result" aria-live="polite">
+      <div class="project-card">
+
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="repo-icon" aria-hidden="true">📦</div>
+            <div>
+              <div class="repo-name" id="res-repo-name"></div>
+              <a class="repo-link" id="res-repo-link" target="_blank" rel="noopener noreferrer">
+                View on GitHub ↗
+              </a>
+            </div>
+          </div>
+          <div class="status-badge">AI Analyzed</div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+
+          <!-- Objective -->
+          <div>
+            <div class="section-title">Objective</div>
+            <p class="section-content" id="res-objective"></p>
+          </div>
+
+          <div class="divider" aria-hidden="true"></div>
+
+          <!-- Summary -->
+          <div>
+            <div class="section-title">Summary</div>
+            <p class="section-content" id="res-summary"></p>
+          </div>
+
+          <div class="divider" aria-hidden="true"></div>
+
+          <!-- Tech Stack -->
+          <div>
+            <div class="section-title">Tech Stack</div>
+            <div class="stack-grid" id="res-stack"></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Footer ── -->
+    <footer>
+      <p>Built with ASP.NET Core · Gemini AI · Nginx · Docker</p>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# === Secrets — NEVER commit ===
+.env
+*.env
+
+# === .NET ===
+backend/obj/
+backend/bin/
+backend/*.user
+backend/.vs/
+
+# === Node (if added later) ===
+node_modules/
+
+# === OS ===
+.DS_Store
+Thumbs.db

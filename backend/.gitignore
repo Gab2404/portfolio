@@ -1,0 +1,5 @@
+# Gitignore pour le backend .NET
+obj/
+bin/
+*.user
+.vs/
