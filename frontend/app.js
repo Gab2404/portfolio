@@ -105,6 +105,7 @@ async function navigate(url, addToHistory = true) {
     // 6. Ré-initialiser le scroll et les animations au nouveau contenu
     window.scrollTo(0, 0);
     initReveal();
+    initProjectsGallery();
 
   } catch (err) {
     console.error('[SPA Router Error]', err);
@@ -177,7 +178,14 @@ async function handleAnalyzeSubmit(form) {
       body: JSON.stringify({ repoUrl: url }),
     });
 
-    const data = await res.json();
+    let data = {};
+    const text = await res.text();
+    try {
+      if (text) data = JSON.parse(text);
+    } catch {
+      // Si la réponse n'est pas du JSON valide (ex: erreur Nginx 404/502)
+    }
+
     if (!res.ok) {
       throw new Error(data.detail || data.error || `Erreur serveur (${res.status})`);
     }
@@ -194,17 +202,17 @@ async function handleAnalyzeSubmit(form) {
 }
 
 function renderResultCard(repoUrl, data) {
-  const resTag   = document.getElementById('res-tag');
-  const resLink  = document.getElementById('res-link');
-  const resName  = document.getElementById('res-repo-name');
-  const resObj   = document.getElementById('res-objective');
-  const resSum   = document.getElementById('res-summary');
-  const resStack = document.getElementById('res-stack');
+  const resTag    = document.getElementById('res-tag');
+  const resLink   = document.getElementById('res-link');
+  const resName   = document.getElementById('res-repo-name');
+  const resHr     = document.getElementById('res-hr-pitch');
+  const resObj    = document.getElementById('res-objective');
+  const resPoints = document.getElementById('res-detailed-points');
+  const resStack  = document.getElementById('res-stack');
+  const resSum    = document.getElementById('res-summary'); // Fallback compatibilité cache
   const resultSec = document.getElementById('result-section');
 
-  if (!resTag || !resLink || !resName || !resObj || !resSum || !resStack || !resultSec) {
-    return;
-  }
+  if (!resultSec) return;
 
   let owner = '?', repoName = '?';
   try {
@@ -214,23 +222,56 @@ function renderResultCard(repoUrl, data) {
     repoName = parts[1] || '?';
   } catch { /* ignore parse errors */ }
 
-  resTag.textContent  = `// ${repoName.toUpperCase()}`;
-  resName.textContent = `${owner}/${repoName}`;
-  resLink.href        = repoUrl;
-  resObj.textContent  = data.objective || '—';
-  resSum.innerHTML    = escapeHtml(data.summary || '—').replace(/\n/g, '<br>');
+  if (resTag)  resTag.textContent  = `// ${repoName.toUpperCase()}`;
+  if (resName) resName.textContent = `${owner}/${repoName}`;
+  if (resLink) resLink.href        = repoUrl;
 
-  resStack.innerHTML = '';
-  const stack = Array.isArray(data.techStack) ? data.techStack : [];
-  if (stack.length === 0) {
-    resStack.innerHTML = '<span style="color:var(--text-muted);font-family:var(--mono);font-size:12px">Aucune technologie détectée</span>';
-  } else {
-    stack.forEach(tech => {
-      const b = document.createElement('span');
-      b.className = 'tech-badge';
-      b.textContent = tech;
-      resStack.appendChild(b);
-    });
+  // HR Pitch (Recruteurs)
+  const hrBox = document.getElementById('res-hr-box');
+  if (resHr) {
+    if (data.hrPitch) {
+      resHr.textContent = data.hrPitch;
+      if (hrBox) hrBox.style.display = 'block';
+    } else {
+      if (hrBox) hrBox.style.display = 'none';
+    }
+  }
+
+  // Objective
+  if (resObj) {
+    resObj.textContent = data.objective || data.summary || '—';
+  }
+
+  // Detailed Points (Liste à puces)
+  if (resPoints) {
+    resPoints.innerHTML = '';
+    const points = Array.isArray(data.detailedPoints) ? data.detailedPoints : [];
+    if (points.length === 0) {
+      resPoints.innerHTML = '<li class="detailed-item">—</li>';
+    } else {
+      points.forEach(pt => {
+        const li = document.createElement('li');
+        li.className = 'detailed-item';
+        li.innerHTML = escapeHtml(pt).replace(/\n/g, '<br>');
+        resPoints.appendChild(li);
+      });
+    }
+  }
+
+  // Tech Stack (Badges)
+  if (resStack) {
+    resStack.innerHTML = '';
+    const stack = Array.isArray(data.techStack) ? data.techStack : [];
+    if (stack.length === 0) {
+      resStack.innerHTML = '<span style="color:var(--text-muted);font-family:var(--mono);font-size:12px">Aucune technologie détectée</span>';
+    } else {
+      stack.forEach(tech => {
+        const b = document.createElement('span');
+        b.className = 'tech-badge';
+        b.textContent = tech;
+        resStack.appendChild(b);
+      });
+    }
   }
 
   resultSec.classList.remove('hidden');
@@ -277,10 +318,154 @@ function initEventDelegation() {
   });
 }
 
+// ── Galerie "Mes Projets Réalisés" (Parallèle, Cache Persistant C# & SPA) ──
+const GALLERY_REPOS = [
+  'https://github.com/Gab2404/portfolio',
+  'https://github.com/Gab2404/ydays-solo-travelers',
+  'https://github.com/Gab2404/linux-r-seau2025',
+  'https://github.com/Gab2404/WindowsserveurTP'
+];
+
+let gallerySessionId = 0;
+
+function createSkeletonCardHtml(index) {
+  return `
+    <div class="project-skeleton-card" id="gallery-card-${index}">
+      <div class="sk-line sk-title"></div>
+      <div class="sk-line sk-mid"></div>
+      <div class="sk-box"></div>
+      <div class="sk-line sk-short"></div>
+      <div class="sk-badges">
+        <div class="sk-badge"></div>
+        <div class="sk-badge"></div>
+        <div class="sk-badge"></div>
+      </div>
+    </div>
+  `;
+}
+
+function createGalleryCardHtml(repoUrl, data) {
+  let owner = '?', repoName = '?';
+  try {
+    const u = new URL(repoUrl);
+    const parts = u.pathname.replace(/^\//, '').replace(/\.git$/, '').split('/');
+    owner = parts[0] || '?';
+    repoName = parts[1] || '?';
+  } catch { /* ignore parse errors */ }
+
+  const hrPitchHtml = data.hrPitch
+    ? `
+      <div class="card-hr-pitch">
+        <div class="hr-pitch-header">
+          <span class="hr-pitch-tag mono">// HR_PITCH_ELEVATOR :: RECRUTEMENT</span>
+          <span class="hr-pitch-badge mono">⭐ PROFIL ALTERNANCE</span>
+        </div>
+        <p class="hr-pitch-text">${escapeHtml(data.hrPitch)}</p>
+      </div>
+    ` : '';
+
+  const points = Array.isArray(data.detailedPoints) ? data.detailedPoints : [];
+  const pointsHtml = points.length === 0
+    ? '<li class="detailed-item">—</li>'
+    : points.map(pt => `<li class="detailed-item">${escapeHtml(pt).replace(/\n/g, '<br>')}</li>`).join('');
+
+  const stack = Array.isArray(data.techStack) ? data.techStack : [];
+  const stackHtml = stack.length === 0
+    ? '<span style="color:var(--text-muted);font-family:var(--mono);font-size:12px">Aucune technologie détectée</span>'
+    : stack.map(tech => `<span class="tech-badge">${escapeHtml(tech)}</span>`).join('');
+
+  return `
+    <div class="gallery-project-card">
+      <div class="card-header">
+        <div class="card-meta">
+          <span class="card-tag mono">// ${escapeHtml(repoName.toUpperCase())}</span>
+          <a href="${escapeHtml(repoUrl)}" class="card-repo-link" target="_blank" rel="noopener noreferrer">
+            <span>${escapeHtml(owner)}/${escapeHtml(repoName)}</span> ↗
+          </a>
+        </div>
+        <span class="card-status">AI Analyzed</span>
+      </div>
+
+      <div class="card-body">
+        ${hrPitchHtml}
+
+        <div class="card-section">
+          <h4 class="card-section-label mono">// objective</h4>
+          <p class="card-text">${escapeHtml(data.objective || data.summary || '—')}</p>
+        </div>
+        <div class="card-divider" aria-hidden="true"></div>
+
+        <div class="card-section">
+          <h4 class="card-section-label mono">// detailed_technical_analysis</h4>
+          <ul class="detailed-list" aria-label="Points techniques clés">
+            ${pointsHtml}
+          </ul>
+        </div>
+        <div class="card-divider" aria-hidden="true"></div>
+
+        <div class="card-section">
+          <h4 class="card-section-label mono">// tech_stack</h4>
+          <div class="badge-grid" aria-label="Technologies utilisées">
+            ${stackHtml}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function initProjectsGallery() {
+  const galleryGrid = document.getElementById('gallery-grid');
+  if (!galleryGrid) return;
+
+  gallerySessionId++;
+  const currentSession = gallerySessionId;
+
+  // 1. Afficher les Skeleton loaders
+  galleryGrid.innerHTML = GALLERY_REPOS.map((_, idx) => createSkeletonCardHtml(idx)).join('');
+
+  // 2. Lancer les 4 appels parallèles et remplacer chaque Skeleton dynamiquement
+  GALLERY_REPOS.forEach((repoUrl, idx) => {
+    fetch('/api/projects/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ repoUrl })
+    })
+    .then(async (res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    })
+    .then(data => {
+      if (gallerySessionId !== currentSession || !document.getElementById('gallery-grid')) return;
+      const cardContainer = document.getElementById(`gallery-card-${idx}`);
+      if (cardContainer) {
+        cardContainer.outerHTML = createGalleryCardHtml(repoUrl, data);
+      }
+    })
+    .catch(err => {
+      console.error(`[Gallery Error] Failed to load ${repoUrl}:`, err);
+      if (gallerySessionId !== currentSession || !document.getElementById('gallery-grid')) return;
+      const cardContainer = document.getElementById(`gallery-card-${idx}`);
+      if (cardContainer) {
+        cardContainer.outerHTML = `
+          <div class="gallery-project-card" style="border-color: rgba(239,68,68,0.4)">
+            <div class="card-header">
+              <span class="card-tag mono" style="color:var(--red)">// ERREUR D'ANALYSE</span>
+              <a href="${escapeHtml(repoUrl)}" target="_blank" class="card-repo-link">${escapeHtml(repoUrl)} ↗</a>
+            </div>
+            <p class="card-text mono" style="color:var(--text-dim)">Impossible de charger l'analyse pour l'instant.</p>
+          </div>
+        `;
+      }
+    });
+  });
+}
+
 // ── Initialisation Générale ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initUI();
   initReveal();
   initEventDelegation();
   updateActiveLinks(window.location.pathname);
+  initProjectsGallery();
 });

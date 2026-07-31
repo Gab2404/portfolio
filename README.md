@@ -7,27 +7,41 @@
 [![Nginx](https://img.shields.io/badge/Proxy-Nginx%20Alpine-009639?logo=nginx&logoColor=white)](https://nginx.org/)
 
 Portfolio professionnel de **Gabriel Queau** — Étudiant & Analyste en **Infrastructure, Réseau et Cybersécurité**.  
-Ce projet intègre une **Single Page Application (SPA) en Vanilla JS** (sans framework) dotée d'animations fluides inspirées de la direction artistique cyberpunk/sombre moderne, couplée à une **API Backend ASP.NET Core 10** capable d'analyser techniquement des dépôts GitHub publics en quelques secondes grâce à **Google Gemini AI**.
+Ce projet intègre une **Single Page Application (SPA) en Vanilla JS** (sans framework) dotée d'animations fluides inspirées d'une direction artistique sombre et technique de niveau agence, couplée à une **API Backend ASP.NET Core 10** capable d'analyser techniquement des dépôts GitHub publics en quelques secondes grâce à **Google Gemini AI** (avec **système de cache persistant** pour des performances instantanées).
 
 ---
 
 ## ✨ Fonctionnalités clés
 
-- **🎨 SPA Vanilla JS Immersif & Dark Mode :**  
-  - Navigation fluide à **3 pages** (*À propos*, *Projets (IA)*, *Contact*) sans rechargement de page.  
+- **🎨 SPA Vanilla JS Immersif & Design Système Cyber :**  
+  - Navigation fluide à **3 pages** (*À propos*, *Projets (IA)*, *Contact*) **sans rechargement de page** (Vanilla SPA Router).  
   - **Transitions de page personnalisées (Effet rideau néon)** synchronisées par promesse JS (`transitionend`) avant injection du DOM.  
   - Animations au défilement optimisées avec `IntersectionObserver` et **délégation d'événements globale** (`Event Delegation`).  
-  - Thème sombre orienté cyber/infrastructure avec accents néon cyan (`#00f2fe`) et violet (`#a855f7`).
+  - Thème sombre professionnel orienté cyber/infrastructure avec accents néon cyan (`#00f2fe`) et violet (`#a855f7`).
 
-- **🤖 Analyseur de dépôts GitHub par IA (Gemini 3.5) :**  
+- **🤖 Analyseur de dépôts GitHub par IA (Gemini 3.5) & Pitch Recruteur :**  
   - Récupère automatiquement le `README.md` d'un dépôt GitHub public (décodage Base64 et support de tokens pour augmenter le quota d'API).  
-  - Analyse le contenu via Google Gemini avec mécanisme de **Retry automatique & Exponential Backoff** (gestion des erreurs 429 Rate Limit).  
-  - Génère un résumé technique structuré en JSON : **Objectif**, **Résumé en 3 lignes** et **Stack technique détaillée** (sous forme de badges interactifs).
+  - Analyse le contenu via Google Gemini avec **System Prompt expert Tech Lead / RH** conçu pour convaincre recruteurs et managers techniques (alternance).  
+  - Génère un résumé technique structuré en JSON enrichi :  
+    - **`objective`** : But principal et problématique résolue par le projet.  
+    - **`techStack`** : Technologies, outils et concepts utilisés.  
+    - **`detailedPoints`** : Analyse point par point (architecture, flux réseau, sécurité et défis surmontés).  
+    - **`hrPitch`** : Encart persuasif de 3-4 lignes mettant en valeur la rigueur et l'opérationnalité du candidat.  
+  - **Résilience JSON & Anti-Truncation (`StripMarkdownJson`)** : Parseur d'accolades équilibré qui tolère les irrégularités de formatage IA et ferme automatiquement les objets JSON si nécessaire.
+
+- **⚡ Système de Cache Persistant C# (`ProjectCacheService`) :**  
+  - **Cache-Aside pattern thread-safe** : Le backend vérifie systématiquement la présence d'une analyse dans `/app/projects-cache.json` (synchronisé via `SemaphoreSlim`).  
+  - **Cache Hit < 5 ms** : Les dépôts déjà analysés sont retournés instantanément, réduisant la consommation de tokens à zéro et garantissant la cohérence des descriptions.
+
+- **🖼️ Galerie de Projets Dynamique ("Mes Projets Réalisés") :**  
+  - Au chargement de la vue *Projets*, la SPA déclenche des requêtes `fetch` **parallèles et asynchrones** vers l'API pour les 4 dépôts phares du portfolio (`portfolio`, `ydays-solo-travelers`, `linux-r-seau2025`, `WindowsserveurTP`).  
+  - **Skeleton Loaders animés (`shimmer`)** affichés immédiatement pendant le chargement.  
+  - **Isolation des erreurs & protection anti-fuite de mémoire** : Gestion granulaire des cartes avec identifiant de session de galerie (`gallerySessionId`).
 
 - **🐳 Architecture DevOps Conteneurisée :**  
   - **Docker Compose** production-ready isolant l'application en 2 conteneurs :  
     - **`frontend` (Nginx Alpine) :** Sert les fichiers statiques HTML/CSS/JS et agit en **reverse proxy** (`/api/*` → conteneur backend) pour éliminer tout problème de CORS.  
-    - **`backend` (.NET 10 ASP.NET Core) :** Isolé dans un réseau interne Docker (`portfolio_internal`), non exposé directement sur Internet pour des raisons de sécurité.  
+    - **`backend` (.NET 10 ASP.NET Core) :** Isolé dans un réseau interne Docker (`portfolio_internal`), exécuté avec un **utilisateur non-root** disposant des permissions d'écriture pour la persistance du cache.  
   - **Healthchecks intégrés** via `curl` sur les deux conteneurs pour garantir la résilience du service.
 
 ---
@@ -38,19 +52,20 @@ Ce projet intègre une **Single Page Application (SPA) en Vanilla JS** (sans fra
 portfolio/
 ├── frontend/                        # Single Page Application (SPA)
 │   ├── index.html                   # Shell principal & page À propos
-│   ├── projects.html                # Page Projets (Analyseur GitHub IA)
+│   ├── projects.html                # Page Projets (Analyseur IA + Galerie dynamique)
 │   ├── contact.html                 # Page Contact
-│   ├── style.css                    # Design système Vanilla CSS & animations rideau
+│   ├── style.css                    # Design système Vanilla CSS, Skeletons & animations
 │   ├── app.js                       # Routeur SPA Vanilla, Event Delegation & appels API
 │   └── nginx.conf                   # Proxy inverse Nginx (/api -> backend:8080) + DNS dynamique
 ├── backend/                         # API Web ASP.NET Core 10
 │   ├── Controllers/
-│   │   └── PortfolioController.cs   # Endpoint POST /api/projects/analyze
+│   │   └── PortfolioController.cs   # Endpoint POST /api/projects/analyze (Cache-Aside)
 │   ├── Services/
 │   │   ├── GitHubService.cs         # Client API GitHub (avec token & Base64)
-│   │   └── AiService.cs             # Client API Gemini (3.5-flash + Retry)
+│   │   ├── AiService.cs             # Client API Gemini (3.5-flash + prompt RH + validation JSON)
+│   │   └── ProjectCacheService.cs   # Singleton de cache persistant JSON thread-safe (SemaphoreSlim)
 │   ├── Models/
-│   │   └── Dtos.cs                  # DTOs et schémas de réponse JSON
+│   │   └── Dtos.cs                  # DTOs et schémas de réponse JSON (Objective, HrPitch, etc.)
 │   ├── PortfolioApi.csproj          # Configuration .NET 10
 │   └── Dockerfile                   # Build multi-stage optimisé + USER non-root ($APP_UID)
 ├── docker-compose.yml               # Orchestration Docker (Frontend Nginx + Backend .NET)
@@ -66,7 +81,7 @@ portfolio/
 ### 1. Prérequis
 - [Docker & Docker Compose](https://www.docker.com/) installés sur le poste ou serveur de production.
 - Une clé API Google Gemini ([obtenir une clé gratuite sur AI Studio](https://aistudio.google.com/app/apikey)).
-- *(Optionnel mais recommandé)* Un Personal Access Token GitHub ([générer un token](https://github.com/settings/tokens)) pour augmenter le quota d'analyse (60 requêtes/h par défaut sans token -> 5000/h avec token).
+- *(Optionnel mais recommandé)* Un Personal Access Token GitHub ([générer un token](https://github.com/settings/tokens)) pour augmenter le quota d'analyse GitHub (60 requêtes/h sans token -> 5000/h avec token).
 
 ### 2. Configuration de l'environnement
 Copiez le fichier exemple `.env.example` en `.env` à la racine du projet :
@@ -120,7 +135,7 @@ Sous Docker ou en production, le script utilise la route relative `/api` transmi
 ## 🔌 API Reference
 
 ### `POST /api/projects/analyze`
-Analyse le fichier `README.md` d'un dépôt GitHub public et retourne une fiche de projet structurée par l'IA.
+Analyse le fichier `README.md` d'un dépôt GitHub public (ou récupère son analyse depuis le cache persistant) et retourne une fiche technique complète générée par l'IA.
 
 #### Request Headers
 ```http
@@ -137,15 +152,20 @@ Content-Type: application/json
 #### Response (200 OK)
 ```json
 {
-  "summary": "Résumé concis en 3 phrases du projet et de ses cas d'usage principaux...",
+  "objective": "Concevoir et déployer une infrastructure réseau Linux multi-serveurs virtualisée et sécurisée...",
   "techStack": [
-    "C#",
-    "ASP.NET Core 10",
-    "Docker",
+    "Linux",
     "Nginx",
-    "JavaScript Vanilla"
+    "Docker",
+    "Prometheus",
+    "Netplan"
   ],
-  "objective": "Paragraphe expliquant clairement la finalité et l'ambition technique du projet..."
+  "detailedPoints": [
+    "Architecture réseau segmentée et sécurisée : Implémentation d'un adressage IP statique via Netplan...",
+    "Reverse Proxying et Résolution DNS : Centralisation des flux entrants sur la VM Gateway via Nginx...",
+    "Orchestration et Isolation Applicative : Déploiement d'une architecture microservices conteneurisée..."
+  ],
+  "hrPitch": "Ce projet démontre une maîtrise rigoureuse de l'administration système Linux, de l'ingénierie réseau et des pratiques DevOps fondamentales..."
 }
 ```
 
@@ -154,7 +174,7 @@ Content-Type: application/json
 |------|-------------|----------|
 | **400 Bad Request** | URL absente ou format GitHub invalide | Vérifier la syntaxe de l'URL GitHub fournie (`https://github.com/owner/repo`). |
 | **404 Not Found** | Dépôt introuvable, privé ou `README.md` absent | S'assurer que le dépôt est bien public et possède un fichier de documentation à la racine. |
-| **500 Internal Server Error** | Erreur réseau GitHub API ou échec Gemini API | Le backend intègre un retry automatique (429/503). Si l'erreur persiste, vérifier le quota API sur Google AI Studio. |
+| **500 Internal Server Error** | Erreur réseau GitHub API ou échec Gemini API | Le backend intègre un parseur JSON tolérant aux erreurs. Si l'erreur persiste, vérifier le quota API sur Google AI Studio. |
 
 ---
 
@@ -175,6 +195,13 @@ docker compose restart
 # Arrêter et supprimer les conteneurs et réseaux
 docker compose down
 ```
+
+> 💡 **Astuce Persistance en Production :**  
+> Pour conserver votre cache d'analyses (`projects-cache.json`) entre les destructions/re-créations de conteneurs, montez un volume dans votre `docker-compose.yml` :
+> ```yaml
+> volumes:
+>   - ./data/projects-cache.json:/app/projects-cache.json
+> ```
 
 ---
 

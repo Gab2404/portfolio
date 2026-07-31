@@ -566,6 +566,72 @@ body::before {
   line-height: 1.8;
 }
 
+/* ── HR Pitch Box (Pour Recruteurs & RH) ── */
+.card-hr-pitch {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+  border: 1px solid rgba(0, 242, 254, 0.35);
+  border-left: 4px solid var(--cyan);
+  border-radius: var(--r);
+  padding: 22px 24px;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.hr-pitch-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.hr-pitch-tag {
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+.hr-pitch-badge {
+  font-size: 10px;
+  color: #000;
+  background: var(--grad);
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.hr-pitch-text {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.75;
+  font-weight: 500;
+}
+
+/* ── Detailed Technical Analysis List ── */
+.detailed-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.detailed-item {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.75;
+  padding-left: 20px;
+  position: relative;
+}
+.detailed-item::before {
+  content: '▪';
+  position: absolute;
+  left: 2px;
+  top: 0;
+  color: var(--cyan);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
 .card-divider { height: 1px; background: var(--border); }
 
 /* ── Badges ── */
@@ -716,6 +782,93 @@ body.is-animating .page-transition-overlay {
 }
 body.is-animating #page-content {
   opacity: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   PROJECTS GALLERY ("MES PROJETS RÉALISÉS")
+══════════════════════════════════════════════════════ */
+.projects-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 32px;
+  margin-top: 40px;
+}
+
+.gallery-project-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease, box-shadow 0.35s ease;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.gallery-project-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--grad);
+  opacity: 0.6;
+  transition: opacity 0.35s ease;
+}
+
+.gallery-project-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(0, 242, 254, 0.4);
+  box-shadow: 0 20px 50px rgba(0, 242, 254, 0.08);
+}
+
+.gallery-project-card:hover::before {
+  opacity: 1;
+}
+
+/* Skeleton Loaders in Gallery */
+.project-skeleton-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-skeleton-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.8s infinite;
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.sk-box {
+  background: var(--bg-card-hover);
+  border-radius: var(--r);
+  height: 85px;
+  width: 100%;
 }
 
 /* ══════════════════════════════════════════════════════

@@ -4,7 +4,7 @@ namespace PortfolioApi.Services;
 public interface IAiService
 {
     /// <summary>
-    /// Returns a raw JSON string (no markdown) with keys: summary, techStack, objective.
+    /// Returns a raw JSON string (no markdown) with keys: objective, techStack, detailedPoints, hrPitch.
     /// Throws <see cref="InvalidOperationException"/> if the AI response cannot be parsed.
     /// </summary>
     Task<string> GenerateProjectDescriptionAsync(string readmeContent, CancellationToken ct = default);

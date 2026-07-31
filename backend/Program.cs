@@ -22,6 +22,7 @@ builder.Services.AddControllers();
 // Typed clients: each service gets its own HttpClient instance
 builder.Services.AddHttpClient<IGitHubService, GitHubService>();
 builder.Services.AddHttpClient<IAiService, AiService>();
+builder.Services.AddSingleton<ProjectCacheService>();
 
 // ── Build ─────────────────────────────────────────────────────────────────────
 var app = builder.Build();

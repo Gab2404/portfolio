@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=3" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
 </head>
 <body>
@@ -101,6 +101,15 @@
               </div>
 
               <div class="card-body">
+                <!-- HR Pitch (Accroche Recruteur) -->
+                <div class="card-hr-pitch" id="res-hr-box">
+                  <div class="hr-pitch-header">
+                    <span class="hr-pitch-tag mono">// HR_PITCH_ELEVATOR :: RECRUTEMENT</span>
+                    <span class="hr-pitch-badge mono">⭐ PROFIL ALTERNANCE</span>
+                  </div>
+                  <p class="hr-pitch-text" id="res-hr-pitch"></p>
+                </div>
+
                 <!-- Objective -->
                 <div class="card-section">
                   <h4 class="card-section-label mono">// objective</h4>
@@ -108,10 +117,10 @@
                 </div>
                 <div class="card-divider" aria-hidden="true"></div>
 
-                <!-- Summary -->
+                <!-- Detailed Technical Analysis (Liste à puces 4 à 5 points) -->
                 <div class="card-section">
-                  <h4 class="card-section-label mono">// summary</h4>
-                  <p class="card-text" id="res-summary"></p>
+                  <h4 class="card-section-label mono">// detailed_technical_analysis</h4>
+                  <ul class="detailed-list" id="res-detailed-points" aria-label="Points techniques clés"></ul>
                 </div>
                 <div class="card-divider" aria-hidden="true"></div>
 
@@ -127,6 +136,20 @@
       </div>
     </section>
 
+    <!-- ── Featured Projects Gallery Section ── -->
+    <section class="section section-dark" id="projects-gallery" aria-label="Galerie de projets réalisés">
+      <div class="container">
+        <p class="section-label mono reveal">// FEATURED_PROJECTS_GALLERY.json</p>
+        <h2 class="section-title reveal reveal-delay-1">Mes Projets Réalisés<span class="dot">.</span></h2>
+        <p class="section-sub reveal reveal-delay-2">
+          Analyse automatique par l'IA des dépôts clés de mon portfolio (Infrastructure · Docker · .NET · Réseau).
+        </p>
+
+        <!-- Grid for Skeleton Loaders / Project Cards -->
+        <div class="projects-gallery-grid" id="gallery-grid"></div>
+      </div>
+    </section>
+
   </main>
 
   <!-- ── Footer ── -->
@@ -136,6 +159,6 @@
   </footer>
 
   <button class="back-top" id="back-top" aria-label="Retour en haut de page" title="Retour en haut">↑</button>
-  <script src="app.js"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

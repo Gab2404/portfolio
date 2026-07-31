@@ -12,12 +12,14 @@ public sealed class PortfolioController : ControllerBase
 {
     private readonly IGitHubService _github;
     private readonly IAiService     _ai;
+    private readonly ProjectCacheService _cache;
     private readonly ILogger<PortfolioController> _logger;
 
-    public PortfolioController(IGitHubService github, IAiService ai, ILogger<PortfolioController> logger)
+    public PortfolioController(IGitHubService github, IAiService ai, ProjectCacheService cache, ILogger<PortfolioController> logger)
     {
         _github = github;
         _ai     = ai;
+        _cache  = cache;
         _logger = logger;
     }
 
@@ -44,7 +46,15 @@ public sealed class PortfolioController : ControllerBase
 
         _logger.LogInformation("Analyzing repo {Owner}/{Repo}", repo!.Owner, repo.Repo);
 
-        // ── 2. Fetch README from GitHub ──────────────────────────────────────────
+        // ── 2. Check Persistent Cache ────────────────────────────────────────────
+        var cachedJson = await _cache.TryGetAnalysisAsync(repo.Owner, repo.Repo);
+        if (cachedJson != null)
+        {
+            _logger.LogInformation("Returning cached AI analysis for {Owner}/{Repo}", repo.Owner, repo.Repo);
+            return Content(cachedJson, "application/json");
+        }
+
+        // ── 3. Fetch README from GitHub ──────────────────────────────────────────
         string readmeContent;
         try
         {
@@ -60,7 +70,7 @@ public sealed class PortfolioController : ControllerBase
             return StatusCode(500, new { error = "Failed to fetch README from GitHub.", detail = ex.Message });
         }
 
-        // ── 3. Generate AI description ───────────────────────────────────────────
+        // ── 4. Generate AI description ───────────────────────────────────────────
         string aiJson;
         try
         {
@@ -72,9 +82,10 @@ public sealed class PortfolioController : ControllerBase
             return StatusCode(500, new { error = "AI generation failed.", detail = ex.Message });
         }
 
-        // ── 4. Return the validated JSON payload ─────────────────────────────────
-        // Return the raw JSON string directly — avoids JsonDocument disposal bug
-        // (using var doc + Ok(doc.RootElement) disposes the doc before ASP.NET serializes it)
+        // ── 5. Save to Persistent Cache ──────────────────────────────────────────
+        await _cache.SaveAnalysisAsync(repo.Owner, repo.Repo, aiJson);
+
+        // ── 6. Return the validated JSON payload ─────────────────────────────────
         return Content(aiJson, "application/json");
     }
 

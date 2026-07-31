@@ -26,6 +26,9 @@ COPY --from=build /app/publish .
 # Install curl for container healthcheck
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
+# Grant non-root user ownership of /app so it can write projects-cache.json
+RUN chown -R $APP_UID:$APP_UID /app
+
 # Use built-in non-root user from official .NET image
 USER $APP_UID
 

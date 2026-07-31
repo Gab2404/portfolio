@@ -16,11 +16,12 @@ public sealed class AiService : IAiService
     private const string GeminiModel = "gemini-3.5-flash";
 
     private const string SystemPrompt =
-        "Agis comme un développeur technique. À partir de ce README, génère une présentation du projet. " +
-        "Tu dois renvoyer UNIQUEMENT un objet JSON brut et valide (sans markdown) contenant 3 clés exactes : " +
-        "'summary' (un résumé du projet en 3 lignes), " +
-        "'techStack' (un tableau de chaînes de caractères listant les langages et outils), " +
-        "et 'objective' (un paragraphe expliquant l'objectif du projet).";
+        "Tu es un Tech Lead expert, chargé de valoriser un projet technique pour un recrutement. À partir du README fourni, génère une analyse complète et très détaillée. Tu dois mettre en valeur la rigueur du candidat et l'impact professionnel du projet, tout particulièrement sur les aspects liés à l'infrastructure, aux réseaux, à la sécurité ou à l'architecture logicielle si le projet s'y prête.\n" +
+        "Tu dois renvoyer UNIQUEMENT un objet JSON brut et valide (sans balises markdown) contenant ces 4 clés exactes :\n" +
+        "- 'objective' : (String) Le but principal et le problème résolu par le projet.\n" +
+        "- 'techStack' : (Array de strings) Les technologies, outils et concepts utilisés.\n" +
+        "- 'detailedPoints' : (Array de strings) Une analyse point par point (4 à 5 points). Chaque point doit décrire précisément l'architecture, le flux de données, la configuration système ou les défis techniques surmontés, avec un vocabulaire très professionnel.\n" +
+        "- 'hrPitch' : (String) Un paragraphe persuasif de 3-4 lignes destiné à un recruteur, expliquant pourquoi ce projet démontre que le candidat est structuré, opérationnel et prêt à intégrer un environnement d'entreprise exigeant.";
 
     private readonly HttpClient     _http;
     private readonly IConfiguration _config;
@@ -58,6 +59,7 @@ public sealed class AiService : IAiService
             generationConfig = new
             {
                 temperature     = 0.2,
+                maxOutputTokens = 4096,
                 responseMimeType = "application/json"
             }
         };
@@ -107,24 +109,81 @@ public sealed class AiService : IAiService
         // Strip optional markdown code fences if the model ignores the mime type hint
         var clean = StripMarkdownJson(text.Trim());
 
+        var jsonOptions = new JsonDocumentOptions
+        {
+            AllowTrailingCommas = true,
+            CommentHandling = JsonCommentHandling.Skip
+        };
+
         // Validate that the result is actually parseable JSON
-        try   { JsonDocument.Parse(clean); }
-        catch { throw new InvalidOperationException("AI response is not valid JSON."); }
+        try
+        {
+            using var validDoc = JsonDocument.Parse(clean, jsonOptions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AI response is not valid JSON. Raw text from Gemini:\n{RawText}", text);
+            throw new InvalidOperationException($"AI response is not valid JSON: {ex.Message}");
+        }
 
         _logger.LogInformation("AI description generated successfully.");
         return clean;
     }
 
-    /// <summary>Removes ```json ... ``` fences that some models still emit.</summary>
+    /// <summary>Extracts the first balanced JSON object {...} from response text, handling braces inside strings and ignoring trailing garbage or extra braces.</summary>
     private static string StripMarkdownJson(string text)
     {
-        if (text.StartsWith("```json", StringComparison.OrdinalIgnoreCase))
-            text = text["```json".Length..];
-        else if (text.StartsWith("```"))
-            text = text["```".Length..];
+        var startIndex = text.IndexOf('{');
+        if (startIndex < 0) return text.Trim();
 
-        if (text.EndsWith("```"))
-            text = text[..^"```".Length];
+        bool inString = false;
+        bool escape = false;
+        int depth = 0;
+
+        for (int i = startIndex; i < text.Length; i++)
+        {
+            char c = text[i];
+
+            if (escape)
+            {
+                escape = false;
+                continue;
+            }
+
+            if (c == '\\' && inString)
+            {
+                escape = true;
+                continue;
+            }
+
+            if (c == '"')
+            {
+                inString = !inString;
+                continue;
+            }
+
+            if (!inString)
+            {
+                if (c == '{')
+                {
+                    depth++;
+                }
+                else if (c == '}')
+                {
+                    depth--;
+                    if (depth == 0)
+                    {
+                        return text.Substring(startIndex, i - startIndex + 1);
+                    }
+                }
+            }
+        }
+
+        // If unbalanced (e.g. LLM omitted trailing closing braces), auto-close open braces
+        if (depth > 0)
+        {
+            return text.Substring(startIndex) + new string('}', depth);
+        }
 
         return text.Trim();
     }
