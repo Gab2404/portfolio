@@ -12,8 +12,8 @@ namespace PortfolioApi.Services;
 /// </summary>
 public sealed class AiService : IAiService
 {
-    // Gemini model used – change to gemini-1.5-flash etc. if needed
-    private const string GeminiModel = "gemini-2.0-flash";
+    // Gemini 3.5 Flash — confirmed working with this API key
+    private const string GeminiModel = "gemini-3.5-flash";
 
     private const string SystemPrompt =
         "Agis comme un développeur technique. À partir de ce README, génère une présentation du projet. " +
@@ -64,8 +64,33 @@ public sealed class AiService : IAiService
 
         _logger.LogInformation("Sending README to Gemini ({Model}).", GeminiModel);
 
-        using var response = await _http.PostAsJsonAsync(url, payload, ct);
-        response.EnsureSuccessStatusCode();
+        // Retry up to 3 times with exponential backoff on 429 rate limit
+        HttpResponseMessage response = null!;
+        for (int attempt = 1; attempt <= 3; attempt++)
+        {
+            response = await _http.PostAsJsonAsync(url, payload, ct);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            {
+                if (attempt == 3) break; // will be handled below
+                var waitSeconds = attempt * 15; // 15s, then 30s
+                _logger.LogWarning("Gemini rate limited (429). Waiting {Sec}s before retry {Attempt}/3…", waitSeconds, attempt + 1);
+                await Task.Delay(TimeSpan.FromSeconds(waitSeconds), ct);
+                continue;
+            }
+            break; // success or non-retryable error
+        }
+
+        // If still not successful, capture and log the response body before throwing
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(ct);
+            _logger.LogError("Gemini API error {Status}: {Body}", (int)response.StatusCode, errorBody);
+            throw new HttpRequestException(
+                $"Gemini API returned {(int)response.StatusCode}: {errorBody}",
+                null,
+                response.StatusCode);
+        }
 
         var body = await response.Content.ReadAsStringAsync(ct);
 

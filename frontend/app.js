@@ -1,135 +1,286 @@
-// ── Config ──────────────────────────────────────────────────────────────────
-// Auto-detect: if opened via file:// or localhost without a server,
-// point directly to the .NET backend. In Docker (nginx), use relative path.
-const IS_LOCAL_DEV = window.location.protocol === 'file:' 
-  || window.location.hostname === 'localhost' 
-  || window.location.hostname === '127.0.0.1';
-const API_BASE = IS_LOCAL_DEV ? 'http://localhost:5211/api' : '/api';
+// ── Config ────────────────────────────────────────────────────────────────────
+// Automatiquement "/api" si hébergé sous Nginx/Docker (port 80/443),
+// sinon "http://localhost:5211/api" si ouvert en local / Live Server.
+const IS_DEV_SERVER = ['file:'].includes(location.protocol) || ['5500', '3000', '8000'].includes(location.port);
+const API_BASE = IS_DEV_SERVER ? 'http://localhost:5211/api' : '/api';
 
-// ── DOM Refs ─────────────────────────────────────────────────────────────────
-const form        = document.getElementById('analyzer-form');
-const input       = document.getElementById('repo-url');
-const btn         = document.getElementById('analyze-btn');
-const loader      = document.getElementById('loader');
-const errorBanner = document.getElementById('error-banner');
-const errorMsg    = document.getElementById('error-msg');
-const resultSec   = document.getElementById('result-section');
+// ── Global State ──────────────────────────────────────────────────────────────
+let revealObs = null;
+let isNavigating = false;
 
-// Result fields
-const repoNameEl   = document.getElementById('res-repo-name');
-const repoLinkEl   = document.getElementById('res-repo-link');
-const objectiveEl  = document.getElementById('res-objective');
-const summaryEl    = document.getElementById('res-summary');
-const stackEl      = document.getElementById('res-stack');
+// ── Intersection Observer (Animations d'apparition fluides) ───────────────────
+function initReveal() {
+  if (revealObs) {
+    revealObs.disconnect();
+  }
 
-// ── State ─────────────────────────────────────────────────────────────────────
-function setLoading(active) {
-  btn.disabled = active;
-  btn.textContent = active ? 'Analyzing…' : 'Analyze';
-  loader.style.display = active ? 'flex' : 'none';
-  if (active) {
-    resultSec.style.display = 'none';
-    hideError();
+  revealObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+}
+
+// ── UI Helpers ────────────────────────────────────────────────────────────────
+function initUI() {
+  const navbar = document.querySelector('.navbar');
+  const backTop = document.getElementById('back-top');
+
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY;
+    if (navbar) {
+      navbar.style.background = scrollY > 20
+        ? 'rgba(12, 13, 16, 0.95)'
+        : 'rgba(12, 13, 16, 0.75)';
+    }
+    if (backTop) {
+      backTop.classList.toggle('visible', scrollY > 400);
+    }
+  }, { passive: true });
+}
+
+// ── Helper : Attendre la fin d'une transition CSS avec fallback ───────────────
+function waitForTransitionEnd(el, timeoutMs = 650) {
+  return new Promise((resolve) => {
+    if (!el) {
+      setTimeout(resolve, 300);
+      return;
+    }
+    let resolved = false;
+    const onEnd = () => {
+      if (resolved) return;
+      resolved = true;
+      el.removeEventListener('transitionend', onEnd);
+      resolve();
+    };
+    el.addEventListener('transitionend', onEnd);
+    setTimeout(onEnd, timeoutMs); // Garantie absolue d'exécution
+  });
+}
+
+// ── Vanilla SPA Router (Avec synchronisation parfaite du rideau) ──────────────
+async function navigate(url, addToHistory = true) {
+  if (isNavigating) return;
+  const targetPath = new URL(url, window.location.origin).pathname;
+  if (targetPath === window.location.pathname && !addToHistory) return;
+
+  isNavigating = true;
+  const overlay = document.querySelector('.page-transition-overlay');
+
+  // 1. Jouer l'animation de sortie (le rideau descend)
+  document.body.classList.add('is-animating');
+  await waitForTransitionEnd(overlay, 600);
+
+  try {
+    // 2. Récupérer dynamiquement le contenu HTML de la cible
+    const res = await fetch(targetPath);
+    if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
+    const htmlString = await res.text();
+
+    // 3. Parser et mettre à jour le conteneur principal #page-content
+    const parser = new DOMParser();
+    const newDoc = parser.parseFromString(htmlString, 'text/html');
+
+    const newContent = newDoc.getElementById('page-content');
+    const currentContent = document.getElementById('page-content');
+
+    if (newContent && currentContent) {
+      currentContent.innerHTML = newContent.innerHTML;
+      document.title = newDoc.title;
+    }
+
+    // 4. Mettre à jour l'historique de navigation
+    if (addToHistory) {
+      history.pushState(null, '', targetPath);
+    }
+
+    // 5. Mettre à jour la classe "active" dans la barre de navigation
+    updateActiveLinks(targetPath);
+
+    // 6. Ré-initialiser le scroll et les animations au nouveau contenu
+    window.scrollTo(0, 0);
+    initReveal();
+
+  } catch (err) {
+    console.error('[SPA Router Error]', err);
+    // Si échec réseau, forcer le rechargement classique de secours
+    window.location.href = url;
+  } finally {
+    // 7. Jouer l'animation d'entrée (le rideau remonte et dévoile le contenu)
+    setTimeout(() => {
+      document.body.classList.remove('is-animating');
+      isNavigating = false;
+    }, 50);
   }
 }
 
-function showError(message) {
-  errorMsg.textContent = message;
-  errorBanner.classList.remove('hidden');
-  errorBanner.classList.add('visible');
+// Mettre en avant la vue active dans la barre de navigation
+function updateActiveLinks(targetPath = window.location.pathname) {
+  const normPath = targetPath === '/' ? '/index.html' : targetPath;
+
+  document.querySelectorAll('a[data-link]').forEach(link => {
+    const linkHref = link.getAttribute('href') || '';
+    const isMatch = linkHref === normPath || 
+                    (normPath === '/index.html' && linkHref === '/') ||
+                    (normPath === '/' && linkHref === '/index.html');
+
+    link.classList.toggle('active', isMatch);
+  });
 }
 
-function hideError() {
-  errorBanner.classList.remove('visible');
-  errorBanner.classList.add('hidden');
+// ── Logique de l'analyseur GitHub (Délégation d'événements) ───────────────────
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
-// ── Form Submit ───────────────────────────────────────────────────────────────
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const url = input.value.trim();
+async function handleAnalyzeSubmit(form) {
+  // Récupération dynamique depuis le DOM courant (évite les références perdues)
+  const input       = document.getElementById('repo-url');
+  const btn         = document.getElementById('analyze-btn');
+  const loader      = document.getElementById('loader');
+  const errorBanner = document.getElementById('error-banner');
+  const errorMsg    = document.getElementById('error-msg');
+  const resultSec   = document.getElementById('result-section');
 
-  if (!url) {
-    showError('Please enter a GitHub repository URL.');
+  if (!input || !btn || !loader || !errorBanner || !errorMsg || !resultSec) {
     return;
   }
 
-  setLoading(true);
+  const url = input.value.trim();
+  if (!url) {
+    errorMsg.textContent = 'Veuillez saisir une URL de dépôt GitHub public.';
+    errorBanner.classList.remove('hidden');
+    return;
+  }
+
+  // Activer le mode chargement
+  btn.disabled = true;
+  const btnText = btn.querySelector('.btn-text');
+  if (btnText) btnText.textContent = 'Analyse en cours…';
+
+  loader.classList.remove('hidden');
+  resultSec.classList.add('hidden');
+  errorBanner.classList.add('hidden');
 
   try {
-    const response = await fetch(`${API_BASE}/projects/analyze`, {
+    const res = await fetch(`${API_BASE}/projects/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ repoUrl: url }),
     });
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      const msg = data.error || `Error ${response.status}: ${response.statusText}`;
-      throw new Error(msg);
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || data.error || `Erreur serveur (${res.status})`);
     }
 
-    const data = await response.json();
-    renderResult(url, data);
-
+    renderResultCard(url, data);
   } catch (err) {
-    showError(err.message || 'An unexpected error occurred. Check the console for details.');
-    console.error('[PortfolioAnalyzer] Error:', err);
+    errorMsg.textContent = err.message || 'Impossible d\'analyser le dépôt. Veuillez vérifier l\'URL.';
+    errorBanner.classList.remove('hidden');
   } finally {
-    setLoading(false);
+    btn.disabled = false;
+    if (btnText) btnText.textContent = 'Analyser';
+    loader.classList.add('hidden');
   }
-});
+}
 
-// ── Render Result ─────────────────────────────────────────────────────────────
-function renderResult(repoUrl, data) {
-  // Extract owner/repo from URL for display
+function renderResultCard(repoUrl, data) {
+  const resTag   = document.getElementById('res-tag');
+  const resLink  = document.getElementById('res-link');
+  const resName  = document.getElementById('res-repo-name');
+  const resObj   = document.getElementById('res-objective');
+  const resSum   = document.getElementById('res-summary');
+  const resStack = document.getElementById('res-stack');
+  const resultSec = document.getElementById('result-section');
+
+  if (!resTag || !resLink || !resName || !resObj || !resSum || !resStack || !resultSec) {
+    return;
+  }
+
+  let owner = '?', repoName = '?';
   try {
     const u = new URL(repoUrl);
     const parts = u.pathname.replace(/^\//, '').replace(/\.git$/, '').split('/');
-    repoNameEl.textContent = parts.slice(0, 2).join('/');
-    repoLinkEl.href = repoUrl;
-  } catch {
-    repoNameEl.textContent = repoUrl;
-    repoLinkEl.href = repoUrl;
-  }
+    owner = parts[0] || '?';
+    repoName = parts[1] || '?';
+  } catch { /* ignore parse errors */ }
 
-  // Objective
-  objectiveEl.textContent = data.objective ?? '—';
+  resTag.textContent  = `// ${repoName.toUpperCase()}`;
+  resName.textContent = `${owner}/${repoName}`;
+  resLink.href        = repoUrl;
+  resObj.textContent  = data.objective || '—';
+  resSum.innerHTML    = escapeHtml(data.summary || '—').replace(/\n/g, '<br>');
 
-  // Summary (preserve line breaks)
-  summaryEl.innerHTML = (data.summary ?? '—')
-    .split('\n')
-    .map(line => `<span>${escapeHtml(line)}</span>`)
-    .join('<br>');
-
-  // Tech stack badges
-  stackEl.innerHTML = '';
+  resStack.innerHTML = '';
   const stack = Array.isArray(data.techStack) ? data.techStack : [];
   if (stack.length === 0) {
-    stackEl.innerHTML = '<span style="color:var(--text-muted);font-size:13px">No tech stack data returned.</span>';
+    resStack.innerHTML = '<span style="color:var(--text-muted);font-family:var(--mono);font-size:12px">Aucune technologie détectée</span>';
   } else {
     stack.forEach(tech => {
-      const badge = document.createElement('span');
-      badge.className = 'stack-badge';
-      badge.textContent = tech;
-      stackEl.appendChild(badge);
+      const b = document.createElement('span');
+      b.className = 'tech-badge';
+      b.textContent = tech;
+      resStack.appendChild(b);
     });
   }
 
-  resultSec.style.display = 'block';
-  resultSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  resultSec.classList.remove('hidden');
+  setTimeout(() => {
+    resultSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
 }
 
-// ── Utility ───────────────────────────────────────────────────────────────────
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+// ── Délégation d'Événements Globale (Event Delegation sur document.body) ──────
+function initEventDelegation() {
+  // 1. Navigation SPA et Bouton Retour en haut
+  document.body.addEventListener('click', (e) => {
+    // Bouton retour en haut
+    const backTop = e.target.closest('#back-top');
+    if (backTop) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // Liens de navigation SPA
+    const navLink = e.target.closest('a[data-link]');
+    if (navLink) {
+      e.preventDefault();
+      const href = navLink.getAttribute('href');
+      if (href) {
+        navigate(href, true);
+      }
+    }
+  });
+
+  // 2. Soumission du formulaire d'analyse IA (fonctionne à 100% après changement de DOM)
+  document.body.addEventListener('submit', async (e) => {
+    const form = e.target.closest('#analyzer-form');
+    if (form) {
+      e.preventDefault();
+      await handleAnalyzeSubmit(form);
+    }
+  });
+
+  // 3. Gestion des boutons Précédent / Suivant du navigateur
+  window.addEventListener('popstate', () => {
+    navigate(window.location.pathname, false);
+  });
 }
 
-// ── Allow Enter key in input ──────────────────────────────────────────────────
-input.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') form.dispatchEvent(new Event('submit'));
+// ── Initialisation Générale ───────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initUI();
+  initReveal();
+  initEventDelegation();
+  updateActiveLinks(window.location.pathname);
 });

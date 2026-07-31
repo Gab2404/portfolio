@@ -1,114 +1,89 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="AI-powered GitHub project analyzer — Portfolio tool for infrastructure & cybersecurity engineers." />
-  <title>Project Analyzer — Portfolio</title>
+  <meta name="description" content="Portfolio Gabriel Queau — Analyste Infrastructure, Réseau & Cybersécurité." />
+  <title>G.QUEAU — Accueil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
 </head>
 <body>
 
-  <div class="container">
+  <!-- ── Neon vignette overlay ── -->
+  <div class="vignette" aria-hidden="true"></div>
+  
+  <!-- ── Page Transition Overlay ── -->
+  <div class="page-transition-overlay"></div>
 
-    <!-- ── Header ── -->
-    <header>
-      <div class="header-badge">AI · GitHub Analyzer · v1.0</div>
-      <h1>Analyze Any<br><span class="gradient">GitHub Project</span></h1>
-      <p class="subtitle">
-        Drop a public repository URL and get an AI-generated technical breakdown
-        in seconds — summary, tech stack & objective.
-      </p>
-    </header>
+  <!-- ── Navbar ── -->
+  <nav class="navbar" role="navigation" aria-label="Navigation principale">
+    <a href="/index.html" class="nav-logo" data-link>G.QUEAU</a>
+    <ul class="nav-links" role="list">
+      <li><a href="/index.html" class="nav-link" data-link>À propos</a></li>
+      <li><a href="/projects.html" class="nav-link" data-link>Projets (IA)</a></li>
+      <li><a href="/contact.html" class="nav-link" data-link>Contact</a></li>
+    </ul>
+  </nav>
 
-    <!-- ── Analyzer Card ── -->
-    <section class="analyzer-card" aria-label="Repository Analyzer">
-      <p class="card-label">// repository url</p>
-
-      <form id="analyzer-form" novalidate>
-        <div class="input-group">
-          <input
-            id="repo-url"
-            type="url"
-            placeholder="https://github.com/owner/repository"
-            autocomplete="off"
-            spellcheck="false"
-            aria-label="GitHub repository URL"
-          />
-          <button id="analyze-btn" type="submit">Analyze</button>
-        </div>
-      </form>
-
-      <!-- Loader -->
-      <div id="loader" role="status" aria-live="polite">
-        <div class="loader-ring" aria-hidden="true"></div>
-        <p class="loader-text">
-          AI is reading the repository<span class="loader-dots"></span>
+  <!-- ── Main Content Container (Dynamic) ── -->
+  <main id="page-content">
+    
+    <!-- ── Hero ── -->
+    <section class="hero" id="home" aria-label="Introduction">
+      <div class="hero-inner container">
+        <p class="hero-label mono reveal">// INFRA_RESEAU_CYBERSECURITE.sh</p>
+        <h1 class="hero-title reveal reveal-delay-1">
+          Gabriel<br><span class="gradient-text">Queau.</span>
+        </h1>
+        <p class="hero-sub reveal reveal-delay-2">
+          Étudiant en Infrastructure, Réseau &amp; Cybersécurité.<br>
+          Passionné par l'automatisation, le cloud et la sécurité des systèmes.
         </p>
+        <div class="hero-cta reveal reveal-delay-3">
+          <a href="/projects.html" class="btn btn-primary" data-link>Analyser un projet →</a>
+        </div>
       </div>
-
-      <!-- Error Banner -->
-      <div id="error-banner" class="hidden" role="alert" aria-live="assertive">
-        <span aria-hidden="true">⚠</span>
-        <span id="error-msg"></span>
-      </div>
+      <div class="hero-grid" aria-hidden="true"></div>
     </section>
 
-    <!-- ── Result Section ── -->
-    <section id="result-section" aria-label="Analysis Result" aria-live="polite">
-      <div class="project-card">
-
-        <!-- Card Header -->
-        <div class="card-header">
-          <div class="card-header-left">
-            <div class="repo-icon" aria-hidden="true">📦</div>
-            <div>
-              <div class="repo-name" id="res-repo-name"></div>
-              <a class="repo-link" id="res-repo-link" target="_blank" rel="noopener noreferrer">
-                View on GitHub ↗
-              </a>
-            </div>
+    <!-- ── À propos ── -->
+    <section class="section" id="about" aria-label="À propos">
+      <div class="container">
+        <p class="section-label mono reveal">// A_PROPOS.BAT</p>
+        <h2 class="section-title reveal reveal-delay-1">Qui suis-je<span class="dot">.</span></h2>
+        <div class="about-grid">
+          <div class="about-card reveal reveal-delay-2">
+            <span class="card-icon" aria-hidden="true">🛡️</span>
+            <h3>Cybersécurité</h3>
+            <p>Analyse de vulnérabilités, durcissement de systèmes, gestion des risques et conformité aux bonnes pratiques de sécurité.</p>
           </div>
-          <div class="status-badge">AI Analyzed</div>
-        </div>
-
-        <!-- Card Body -->
-        <div class="card-body">
-
-          <!-- Objective -->
-          <div>
-            <div class="section-title">Objective</div>
-            <p class="section-content" id="res-objective"></p>
+          <div class="about-card reveal reveal-delay-3">
+            <span class="card-icon" aria-hidden="true">🌐</span>
+            <h3>Infrastructure & Réseau</h3>
+            <p>Architecture réseau, virtualisation, déploiement cloud (Azure), automatisation avec Ansible et conteneurisation Docker.</p>
           </div>
-
-          <div class="divider" aria-hidden="true"></div>
-
-          <!-- Summary -->
-          <div>
-            <div class="section-title">Summary</div>
-            <p class="section-content" id="res-summary"></p>
+          <div class="about-card reveal reveal-delay-4">
+            <span class="card-icon" aria-hidden="true">⚙️</span>
+            <h3>Développement</h3>
+            <p>APIs REST en C# ASP.NET Core, scripting Bash/PowerShell, Infrastructure-as-Code avec Bicep et Terraform.</p>
           </div>
-
-          <div class="divider" aria-hidden="true"></div>
-
-          <!-- Tech Stack -->
-          <div>
-            <div class="section-title">Tech Stack</div>
-            <div class="stack-grid" id="res-stack"></div>
-          </div>
-
         </div>
       </div>
     </section>
 
-    <!-- ── Footer ── -->
-    <footer>
-      <p>Built with ASP.NET Core · Gemini AI · Nginx · Docker</p>
-    </footer>
+  </main>
 
-  </div>
+  <!-- ── Footer ── -->
+  <footer class="footer" role="contentinfo">
+    <p class="mono">G.QUEAU — Infrastructure · Réseau · Cybersécurité</p>
+    <p class="footer-stack">Built with ASP.NET Core · Gemini AI · Nginx · Docker</p>
+  </footer>
 
+  <button class="back-top" id="back-top" aria-label="Retour en haut de page" title="Retour en haut">↑</button>
   <script src="app.js"></script>
 </body>
 </html>

@@ -73,9 +73,9 @@ public sealed class PortfolioController : ControllerBase
         }
 
         // ── 4. Return the validated JSON payload ─────────────────────────────────
-        // Parse and re-serialize to ensure clean Content-Type: application/json
-        using var doc = JsonDocument.Parse(aiJson);
-        return Ok(doc.RootElement);
+        // Return the raw JSON string directly — avoids JsonDocument disposal bug
+        // (using var doc + Ok(doc.RootElement) disposes the doc before ASP.NET serializes it)
+        return Content(aiJson, "application/json");
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────────
