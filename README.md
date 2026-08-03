@@ -1,4 +1,4 @@
-# ⚡ G.QUEAU — Portfolio & AI Project Analyzer
+# 🛡️ G.QUEAU — Portfolio & AI Project Analyzer
 
 <div align="center">
 
