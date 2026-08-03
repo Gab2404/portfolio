@@ -3,53 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Portfolio Gabriel Queau — Me Contacter." />
+  <meta name="description" content="Gabriel Queau — Me contacter. Email, GitHub, LinkedIn." />
+  <meta name="theme-color" content="#09090b" />
   <title>G.QUEAU — Contact</title>
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=2" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css?v=4" />
+
+  <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
 </head>
 <body>
 
-  <!-- ── Neon vignette overlay ── -->
+  <!-- Vignette radial glows -->
   <div class="vignette" aria-hidden="true"></div>
-  
-  <!-- ── Page Transition Overlay ── -->
-  <div class="page-transition-overlay"></div>
+
+  <!-- Page Transition Overlay -->
+  <div class="page-transition-overlay" aria-hidden="true"></div>
 
   <!-- ── Navbar ── -->
   <nav class="navbar" role="navigation" aria-label="Navigation principale">
     <a href="/index.html" class="nav-logo" data-link>G.QUEAU</a>
     <ul class="nav-links" role="list">
-      <li><a href="/index.html" class="nav-link" data-link>À propos</a></li>
+      <li><a href="/index.html"    class="nav-link" data-link>À propos</a></li>
       <li><a href="/projects.html" class="nav-link" data-link>Projets (IA)</a></li>
-      <li><a href="/contact.html" class="nav-link" data-link>Contact</a></li>
+      <li><a href="/contact.html"  class="nav-link" data-link>Contact</a></li>
     </ul>
   </nav>
 
-  <!-- ── Main Content Container (Dynamic) ── -->
+  <!-- ── Main Content ── -->
   <main id="page-content">
-    
-    <!-- ── Contact ── -->
-    <section class="section" id="contact" aria-label="Contact" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
-      <div class="container contact-inner" style="width: 100%;">
-        <p class="section-label mono reveal">// M3_C0NT4CT3R.MSI</p>
-        <h2 class="section-title reveal reveal-delay-1">Me contacter<span class="dot">.</span></h2>
-        <div class="contact-links reveal reveal-delay-2">
-          <a href="mailto:gabriel.queau@ynov.com" class="contact-item">
-            <span class="contact-label mono">Email</span>
-            <span class="contact-value">gabriel.queau@ynov.com →</span>
-          </a>
-          <a href="https://github.com/Gab2404" target="_blank" rel="noopener noreferrer" class="contact-item">
-            <span class="contact-label mono">GitHub</span>
-            <span class="contact-value">github.com/Gab2404 →</span>
-          </a>
-          <a href="https://www.linkedin.com/in/gabriel-queau" target="_blank" rel="noopener noreferrer" class="contact-item">
-            <span class="contact-label mono">LinkedIn</span>
-            <span class="contact-value">linkedin.com/in/gabriel-queau →</span>
-          </a>
+
+    <!-- ══ CONTACT ══ -->
+    <section
+      class="section"
+      id="contact"
+      aria-label="Contact"
+      style="min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding-top: 64px;"
+    >
+      <div class="container">
+        <div class="contact-inner">
+
+          <span class="section-label reveal">// M3_C0NT4CT3R.MSI</span>
+          <h1 class="section-title reveal reveal-delay-1">Me contacter<span class="dot">.</span></h1>
+          <p class="section-sub reveal reveal-delay-2">
+            Disponible pour une alternance à partir de septembre 2025.<br>
+            N'hésitez pas à me contacter pour toute opportunité.
+          </p>
+
+          <nav class="contact-links reveal reveal-delay-3" aria-label="Liens de contact">
+
+            <a href="mailto:gabriel.queau@ynov.com" class="contact-item">
+              <span class="contact-label mono">Email</span>
+              <span class="contact-value">gabriel.queau@ynov.com</span>
+              <span class="contact-arrow" aria-hidden="true">↗</span>
+            </a>
+
+            <a
+              href="https://github.com/Gab2404"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="contact-item"
+            >
+              <span class="contact-label mono">GitHub</span>
+              <span class="contact-value">github.com/Gab2404</span>
+              <span class="contact-arrow" aria-hidden="true">↗</span>
+            </a>
+
+            <a
+              href="https://www.linkedin.com/in/gabriel-queau"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="contact-item"
+            >
+              <span class="contact-label mono">LinkedIn</span>
+              <span class="contact-value">linkedin.com/in/gabriel-queau</span>
+              <span class="contact-arrow" aria-hidden="true">↗</span>
+            </a>
+
+          </nav>
         </div>
       </div>
     </section>
@@ -63,6 +100,6 @@
   </footer>
 
   <button class="back-top" id="back-top" aria-label="Retour en haut de page" title="Retour en haut">↑</button>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

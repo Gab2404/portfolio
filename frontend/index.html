@@ -1,23 +1,36 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Portfolio Gabriel Queau — Analyste Infrastructure, Réseau & Cybersécurité." />
-  <title>G.QUEAU — Accueil</title>
+  <meta name="description"
+    content="Gabriel Queau — Étudiant en Infrastructure, Réseau &amp; Cybersécurité. Portfolio technique avec analyseur de projets GitHub IA." />
+  <meta name="theme-color" content="#09090b" />
+  <title>G.QUEAU — Infrastructure &amp; Cybersécurité</title>
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=2" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css?v=4" />
+
+  <!-- Favicon -->
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
 </head>
+
 <body>
 
-  <!-- ── Neon vignette overlay ── -->
+  <!-- Vignette radial glows -->
   <div class="vignette" aria-hidden="true"></div>
-  
-  <!-- ── Page Transition Overlay ── -->
-  <div class="page-transition-overlay"></div>
+
+  <!-- Page Transition Overlay -->
+  <div class="page-transition-overlay" aria-hidden="true"></div>
 
   <!-- ── Navbar ── -->
   <nav class="navbar" role="navigation" aria-label="Navigation principale">
@@ -29,48 +42,69 @@
     </ul>
   </nav>
 
-  <!-- ── Main Content Container (Dynamic) ── -->
+  <!-- ── Main Content ── -->
   <main id="page-content">
-    
-    <!-- ── Hero ── -->
+
+    <!-- ══ HERO ══ -->
     <section class="hero" id="home" aria-label="Introduction">
       <div class="hero-inner container">
-        <p class="hero-label mono reveal">// INFRA_RESEAU_CYBERSECURITE.sh</p>
+
+        <p class="hero-label reveal">// INFRA_RESEAU_CYBERSECURITE.sh</p>
+
         <h1 class="hero-title reveal reveal-delay-1">
           Gabriel<br><span class="gradient-text">Queau.</span>
         </h1>
+
         <p class="hero-sub reveal reveal-delay-2">
           Étudiant en Infrastructure, Réseau &amp; Cybersécurité.<br>
-          Passionné par l'automatisation, le cloud et la sécurité des systèmes.
         </p>
+
         <div class="hero-cta reveal reveal-delay-3">
-          <a href="/projects.html" class="btn btn-primary" data-link>Analyser un projet →</a>
+          <a href="/projects.html" class="btn btn-primary" data-link>
+            <span class="btn-text">Analyser un projet</span>
+            <span class="btn-arrow" aria-hidden="true">→</span>
+          </a>
+          <a href="/contact.html" class="btn btn-ghost" data-link>Me contacter</a>
         </div>
+
       </div>
       <div class="hero-grid" aria-hidden="true"></div>
     </section>
 
-    <!-- ── À propos ── -->
+    <!-- ══ À PROPOS ══ -->
     <section class="section" id="about" aria-label="À propos">
       <div class="container">
-        <p class="section-label mono reveal">// A_PROPOS.BAT</p>
+
+        <span class="section-label reveal">// A_PROPOS.BAT</span>
         <h2 class="section-title reveal reveal-delay-1">Qui suis-je<span class="dot">.</span></h2>
+        <p class="section-sub reveal reveal-delay-2">
+          Étudiant en 3ème année à Ynov, spécialisé en systèmes, réseaux et sécurité.
+          Je construis des infrastructures robustes et automatise tout ce qui peut l'être.
+        </p>
+
         <div class="about-grid">
-          <div class="about-card reveal reveal-delay-2">
+
+          <div class="about-card card-spotlight reveal reveal-delay-2">
             <span class="card-icon" aria-hidden="true">🛡️</span>
             <h3>Cybersécurité</h3>
-            <p>Analyse de vulnérabilités, durcissement de systèmes, gestion des risques et conformité aux bonnes pratiques de sécurité.</p>
+            <p>Analyse de vulnérabilités, durcissement de systèmes, gestion des risques et conformité aux bonnes
+              pratiques de sécurité.</p>
           </div>
-          <div class="about-card reveal reveal-delay-3">
+
+          <div class="about-card card-spotlight reveal reveal-delay-3">
             <span class="card-icon" aria-hidden="true">🌐</span>
-            <h3>Infrastructure & Réseau</h3>
-            <p>Architecture réseau, virtualisation, déploiement cloud (Azure), automatisation avec Ansible et conteneurisation Docker.</p>
+            <h3>Infrastructure &amp; Réseau</h3>
+            <p>Architecture réseau, virtualisation, déploiement cloud Azure, automatisation avec Ansible et
+              conteneurisation Docker.</p>
           </div>
-          <div class="about-card reveal reveal-delay-4">
+
+          <div class="about-card card-spotlight reveal reveal-delay-4">
             <span class="card-icon" aria-hidden="true">⚙️</span>
             <h3>Développement</h3>
-            <p>APIs REST en C# ASP.NET Core, scripting Bash/PowerShell, Infrastructure-as-Code avec Bicep et Terraform.</p>
+            <p>APIs REST en C# ASP.NET Core, scripting Bash/PowerShell, Infrastructure-as-Code avec Bicep et Terraform.
+            </p>
           </div>
+
         </div>
       </div>
     </section>
@@ -84,6 +118,7 @@
   </footer>
 
   <button class="back-top" id="back-top" aria-label="Retour en haut de page" title="Retour en haut">↑</button>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
+
 </html>

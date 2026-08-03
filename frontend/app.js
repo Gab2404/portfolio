@@ -31,16 +31,31 @@ function initUI() {
   const navbar = document.querySelector('.navbar');
   const backTop = document.getElementById('back-top');
 
+  // Navbar scroll : classe .scrolled + fond renforcé
   window.addEventListener('scroll', () => {
     const scrollY = window.scrollY;
     if (navbar) {
-      navbar.style.background = scrollY > 20
-        ? 'rgba(12, 13, 16, 0.95)'
-        : 'rgba(12, 13, 16, 0.75)';
+      navbar.classList.toggle('scrolled', scrollY > 20);
     }
     if (backTop) {
       backTop.classList.toggle('visible', scrollY > 400);
     }
+  }, { passive: true });
+
+  // Effet spotlight : radial gradient qui suit la souris sur .card-spotlight
+  initSpotlight();
+}
+
+function initSpotlight() {
+  document.body.addEventListener('mousemove', (e) => {
+    const cards = document.querySelectorAll('.card-spotlight');
+    cards.forEach(card => {
+      const rect = card.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width)  * 100;
+      const y = ((e.clientY - rect.top)  / rect.height) * 100;
+      card.style.setProperty('--x', `${x}%`);
+      card.style.setProperty('--y', `${y}%`);
+    });
   }, { passive: true });
 }
 
@@ -331,14 +346,14 @@ let gallerySessionId = 0;
 function createSkeletonCardHtml(index) {
   return `
     <div class="project-skeleton-card" id="gallery-card-${index}">
-      <div class="sk-line sk-title"></div>
-      <div class="sk-line sk-mid"></div>
-      <div class="sk-box"></div>
-      <div class="sk-line sk-short"></div>
-      <div class="sk-badges">
-        <div class="sk-badge"></div>
-        <div class="sk-badge"></div>
-        <div class="sk-badge"></div>
+      <div class="sk-line sk-title sk-wave"></div>
+      <div class="sk-line sk-mid sk-wave" style="margin-top:12px"></div>
+      <div class="sk-box sk-wave" style="height:72px;margin-top:12px"></div>
+      <div class="sk-line sk-short sk-wave" style="margin-top:12px"></div>
+      <div class="sk-badges" style="margin-top:12px">
+        <div class="sk-badge sk-wave"></div>
+        <div class="sk-badge sk-wave" style="animation-delay:.15s"></div>
+        <div class="sk-badge sk-wave" style="animation-delay:.3s"></div>
       </div>
     </div>
   `;
@@ -375,7 +390,7 @@ function createGalleryCardHtml(repoUrl, data) {
     : stack.map(tech => `<span class="tech-badge">${escapeHtml(tech)}</span>`).join('');
 
   return `
-    <div class="gallery-project-card">
+    <div class="gallery-project-card card-spotlight anim-scale">
       <div class="card-header">
         <div class="card-meta">
           <span class="card-tag mono">// ${escapeHtml(repoName.toUpperCase())}</span>
@@ -383,7 +398,7 @@ function createGalleryCardHtml(repoUrl, data) {
             <span>${escapeHtml(owner)}/${escapeHtml(repoName)}</span> ↗
           </a>
         </div>
-        <span class="card-status">AI Analyzed</span>
+        <span class="card-status" aria-label="Analysé par IA">AI Analyzed</span>
       </div>
 
       <div class="card-body">
